@@ -1,0 +1,15 @@
+// Ease in Sine
+// Shader for MagicaVoxel by @ephtracy
+// Adapted from : https://easings.net/#easeInSine
+// xs_begin
+// author : '/william-clegg/'
+// arg : { id = '1'  name = 'Thickness' var = 'THICK' value = '10' range = '1 100'  step = '1'  decimal = '0' }
+// xs_end
+
+float map(vec3 c) {
+
+	float c4 = (1.0 - cos(((c.x/i_volume_size.x) * 3.14) / 2.0))*i_volume_size.z;
+	vec3 v = vec3(c.x, c.y, c4);
+	
+	if(distance(c, v) < THICK) { return i_color_index; }
+}

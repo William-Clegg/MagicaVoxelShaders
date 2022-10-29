@@ -1,0 +1,69 @@
+// Mushroom
+// Shader for MagicaVoxel by @ephtracy
+// Adapted from : https://iquilezles.org/articles/distfunctions/ (Cut hollow sphere & round cone)
+// xs_begin
+// author : '/william-clegg/'
+// arg : { id = '0'  name = 'Height'  var = 'HEIGHT'  value = '0.60'  range = '0.01 1.0'  step = '.01'  decimal = '2' }
+// arg : { id = '1'  name = 'BaseRad'  var = 'BASE_RADIUS'  value = '.1'  range = '0.01 0.3'  step = '0.01'  decimal = '2' }
+// arg : { id = '2'  name = 'TopRad'  var = 'TOP_RADIUS'  value = '.05'  range = '0.01 0.3'  step = '0.01'  decimal = '2' }
+// arg : { id = '3'  name = 'CapRad'  var = 'CAP_RADIUS'  value = '.25'  range = '0.05 0.5'  step = '.01'  decimal = '2' }
+// arg : { id = '4'  name = 'CapThick'  var = 'CAP_THICKNESS'  value = '.04'  range = '.01 .1'  step = '.01'  decimal = '2' }
+// arg : { id = '5'  name = 'CapLen'  var = 'CAP_HEIGHT'  value = '.15' range = '.0 .3'  step = '.01'  decimal = '2' }
+// arg : { id = '6'  name = 'Skew'  var = 'SKEW'  value = '0.0' range = '0.0 0.1'  step = '.01'  decimal = '2' }
+// xs_end
+
+float dot2(in vec3 v) { return dot(v,v); }
+
+float map(vec3 c) {
+
+	//Stem
+	float r1 = BASE_RADIUS;
+	float r2 = TOP_RADIUS;
+	c = c/i_volume_size;
+	vec3 a = vec3(0.5, 0.5, 0.0);
+	vec3 b = vec3(0.5 + SKEW, 0.5 + SKEW, HEIGHT);
+	
+	vec3 ba = b-a;
+	float l2 = dot(ba, ba);
+	float rr = r1 - r2;
+	float a2 = l2 - (rr * rr);
+	float il2 = 1.0/l2;
+	
+	vec3 ca = c-a;
+	float y = dot(ca,ba);
+	float z = y - l2;
+	float x2 = dot2(ca*l2 - ba*y);
+	float y2 = y*y*l2;
+	float z2 = z*z*l2;
+	float k = sign(rr)*rr*rr*x2;
+	
+    vec3  q_wave = vec3(c.x, c.y, c.z);
+	
+	//Cap
+	q_wave = q_wave - .5;
+	q_wave.z = q_wave.z + CAP_RADIUS + (.5 - HEIGHT - TOP_RADIUS);
+	if(SKEW > 0.0) {
+		q_wave.x = q_wave.x - SKEW;
+		q_wave.y = q_wave.y - SKEW;
+	}
+
+	float r = CAP_RADIUS;
+	float h = CAP_HEIGHT - .15;
+	float t = CAP_THICKNESS;
+	
+	float w = sqrt(r*r-h*h);
+	vec2 q = vec2(length(q_wave.xy), -q_wave.z);
+	float color = 0;
+	
+	if(((sign(z)*a2*z2>k && sqrt(x2 + z2)*il2 < r2) || 
+		(sign(y)*a2*y2<k && sqrt(x2 + y2) * il2 < r1) || 
+		sign(z)*a2*z2<k && (sqrt(x2*a2*il2)+y*rr)*il2 < r1)) {
+			color = i_color_index;
+	}
+	
+	if ((h*q.x<w*q.y && (length(q-vec2(w,h))) < t) || 
+		(h*q.x>=w*q.y && (abs(length(q)-r)) < t)) {
+			color = i_color_index+1;
+	}
+	return color;
+}
